@@ -1,0 +1,47 @@
+# 右键在~/vpn打开终端。
+sudo ./vpnserver
+
+# 再打开6个终端
+sudo docker exec -it HostU0 /bin/bash
+sudo docker exec -it HostU0 /bin/bash
+sudo docker exec -it HostU1 /bin/bash
+sudo docker exec -it HostU1 /bin/bash
+sudo docker exec -it HostU2 /bin/bash
+sudo docker exec -it HostU2 /bin/bash
+
+# docker全部切换到client中
+cd client
+
+#（服务器中）
+#1. 用opensssl检查VPN服务器证书信息：
+openssl x509 -noout -text -in cert_server/server.crt
+
+#（HostU0中）
+#2. 修改VPN客户端主机时间到VPN服务器证书有效期之后再登录VPN服务器:
+date -s 2023-06-30
+sudo ./vpnclient #会显示过期
+
+date -s 2022-06-10
+sudo ./vpnclient #会正常显示登录流程
+
+#3. VPN客户端以错误的用户名或口令登录VPN服务器：
+#输入seed，和错误的口令，提示登录出错
+#输入seed，和正确的口令，提示登录正确
+
+#4. 登录后，能通信，在第二个HostU0终端：
+ping 192.168.60.101
+# 有正常回应
+
+#5、6. 打开wireshark选择docker1，观察经隧道封装、隧道为TLS。
+
+# （HostU0、HostU1、HostU2中）
+#7. 开启2个以上VPN客户端容器，同时登录VPN服务器，分别测试telnet通信：
+sudo ./vpnclient
+telnet 192.168.60.101
+# 三个都能正常登录
+
+#8. 断开其中一个VPN客户端，和所有的telnet连接，测试另外一个的隧道通信：
+# 断开HostU0的vpnclient，然后再测试HostU1、HostU的telnet连接
+telnet 192.168.60.101
+
+#后面的显而易见。
